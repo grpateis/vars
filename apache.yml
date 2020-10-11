@@ -1,0 +1,40 @@
+---
+- hosts: all
+  become: yes
+
+  handlers:
+  - name: restart apache
+    service: 
+      name: "{{ apache_service }}"
+      state: restarted
+     
+  pre_tasks:
+    - name : Load variable files.
+      include_vars: "{{ item }}"
+      with_first_found:
+        - "vars/apache_{{ ansible_os_family }}.yml"
+        - "vars/apache_default.yml"
+
+  tasks:
+  - name: Ensure Apache  is installed.
+    yum:
+      name: "{{ apache_package }}"
+      state: present     
+
+  - name: Copy test config files.
+    copy:
+      src: files/test.conf
+      dest: "{{ apache_config_dir }}/test.conf"
+    notify: restart apache
+
+  - name: Ensure Apache is running.
+    service:
+      name: "{{ apache_service }}"
+      state: started
+      enabled: yes
+
+
+
+
+ 
+
